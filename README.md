@@ -64,11 +64,12 @@ information about this open-source, software-defined GNSS receiver.
    1. [GNU/Linux](#gnulinux)
       1. [Alternative 1: Install dependencies using software packages](#alternative-1-install-dependencies-using-software-packages)
          1. [Debian / Ubuntu](#debian--ubuntu)
-         2. [Arch Linux](#arch-linux)
-         3. [CentOS](#centos)
-         4. [Fedora](#fedora)
-         5. [openSUSE](#opensuse)
-         6. [Rocky Linux](#rocky-linux)
+         2. [AlmaLinux](#almalinux)
+         3. [Arch Linux](#arch-linux)
+         4. [CentOS](#centos)
+         5. [Fedora](#fedora)
+         6. [openSUSE](#opensuse)
+         7. [Rocky Linux](#rocky-linux)
       2. [Alternative 2: Install dependencies using PyBOMBS](#alternative-2-install-dependencies-using-pybombs)
       3. [Manual installation of other required dependencies](#manual-installation-of-other-required-dependencies)
          1. [Install Armadillo, a C++ linear algebra library](#install-armadillo-a-c-linear-algebra-library)
@@ -85,7 +86,6 @@ information about this open-source, software-defined GNSS receiver.
          2. [Build FMCOMMS2 based SDR Hardware support (OPTIONAL)](#build-fmcomms2-based-sdr-hardware-support-optional)
          3. [Build OpenCL support (OPTIONAL)](#build-opencl-support-optional)
          4. [Build CUDA support (OPTIONAL)](#build-cuda-support-optional)
-         5. [Build a portable binary](#build-a-portable-binary)
    2. [macOS](#macos)
       1. [Macports](#macports)
       2. [Homebrew](#homebrew)
@@ -125,7 +125,7 @@ This section describes how to set up the compilation environment in GNU/Linux or
 
 ## GNU/Linux
 
-- Tested distributions: Ubuntu 14.04 LTS and above; Debian 8.0 "jessie" and
+- Tested distributions: Ubuntu 14.04 LTS and above; Debian 9.0 "stretch" and
   above; Arch Linux; CentOS 7; Fedora 26 and above; OpenSUSE 42.3 and above.
 - Supported microprocessor architectures:
   - i386: Intel x86 instruction set (32-bit microprocessors).
@@ -142,6 +142,7 @@ This section describes how to set up the compilation environment in GNU/Linux or
     Motorola (now Freescale), and Apple.
   - ppc64: 64-bit big-endian PowerPC architecture.
   - ppc64el: 64-bit little-endian PowerPC architecture.
+  - riscv64: 64-bit RISC-V open standard instruction set architecture.
   - s390x: IBM System z architecture for mainframe computers.
 
 Older distribution releases might work as well, but you will need GCC 4.7 or
@@ -159,7 +160,7 @@ packages.
 
 #### Debian / Ubuntu
 
-If you are using Debian 8, Ubuntu 14.10 or above, this can be done by copying
+If you are using Debian 9, Ubuntu 14.10 or above, this can be done by copying
 and pasting the following line in a terminal:
 
 ```
@@ -171,10 +172,9 @@ $ sudo apt-get install build-essential cmake git pkg-config libboost-dev libboos
        libprotobuf-dev protobuf-compiler python3-mako
 ```
 
-Please note that the required files from `libgtest-dev` were moved to
-`googletest` in Debian 9 "stretch" and Ubuntu 18.04 "bionic", and moved back
-again to `libgtest-dev` in Debian 10 "buster" and Ubuntu 18.10 "cosmic" (and
-above).
+Please note that the required files from `libgtest-dev` were named `googletest`
+in Debian 9 "stretch" and Ubuntu 18.04 "bionic", and renamed to `libgtest-dev`
+in Debian 10 "buster" and above.
 
 Since Ubuntu 21.04 Hirsute / Debian 11, the package `libcpu-features-dev` is
 also required.
@@ -194,9 +194,25 @@ In distributions older than Ubuntu 16.04 or Debian 9, `python3-mako` must be
 replaced by `python-mako`. For Ubuntu 14.04, you will need to add the package
 `python-six` to the list of dependencies.
 
-**Note for Debian 8 "jessie" users:** please see the note about `libmatio-dev`
-above. Install `libtool`, `automake` and `libhdf5-dev` instead. You will also
-need `python-six`.
+Once you have installed these packages, you can jump directly to
+[download the source code and build GNSS-SDR](#clone-gnss-sdrs-git-repository).
+
+#### AlmaLinux
+
+If you are using AlmaLinux:
+
+```
+# dnf update -y
+# dnf install -y 'dnf-command(config-manager)'
+# dnf config-manager --set-enabled powertools
+# dnf install -y epel-release
+# dnf install -y make gcc gcc-c++ kernel-devel cmake git boost-devel \
+      boost-date-time boost-system boost-thread boost-chrono \
+      boost-serialization log4cpp-devel gmp-devel uhd-devel gnuradio-devel \
+      pugixml-devel matio-devel protobuf-devel glog-devel libpcap-devel \
+      blas-devel lapack-devel armadillo-devel openssl-devel python3-mako \
+      libarchive
+```
 
 Once you have installed these packages, you can jump directly to
 [download the source code and build GNSS-SDR](#clone-gnss-sdrs-git-repository).
@@ -387,9 +403,9 @@ $ sudo apt-get install libblas-dev liblapack-dev       # For Debian/Ubuntu/Linux
 $ sudo yum install lapack-devel blas-devel             # For Fedora/CentOS/RHEL
 $ sudo zypper install lapack-devel blas-devel          # For OpenSUSE
 $ sudo pacman -S blas lapack                           # For Arch Linux
-$ wget https://sourceforge.net/projects/arma/files/armadillo-11.2.1.tar.xz
-$ tar xvfz armadillo-11.2.1.tar.xz
-$ cd armadillo-11.2.1
+$ wget https://sourceforge.net/projects/arma/files/armadillo-12.0.1.tar.xz
+$ tar xvfz armadillo-12.0.1.tar.xz
+$ cd armadillo-12.0.1
 $ cmake .
 $ make
 $ sudo make install
@@ -456,24 +472,14 @@ $ sudo ldconfig
 #### Install [Protocol Buffers](https://developers.google.com/protocol-buffers/ "Protocol Buffers' Homepage"), a portable mechanism for serialization of structured data
 
 GNSS-SDR requires Protocol Buffers v3.0.0 or later. If the packages that come
-with your distribution are older than that (_e.g._, Ubuntu 16.04 Xenial and
-Debian 8 Jessie came with older versions), then you will need to install it
-manually. First, install the dependencies:
+with your distribution are older than that (_e.g._, Ubuntu 16.04 Xenial came
+with an older versions), then you will need to install it manually:
 
 ```
-$ sudo apt-get install autoconf automake libtool curl make g++ unzip
-```
-
-and then:
-
-```
-$ git clone https://github.com/protocolbuffers/protobuf.git
+$ git clone --recursive https://github.com/protocolbuffers/protobuf.git
 $ cd protobuf
-$ git submodule update --init --recursive
-$ ./autogen.sh
-$ /configure
-$ make -j$(nproc)
-$ sudo make install
+$ cmake -DABSL_PROPAGATE_CXX_STD=ON -Dprotobuf_BUILD_TESTS=OFF .
+$ cmake --build --config Release --target install .
 $ sudo ldconfig
 ```
 
@@ -496,8 +502,8 @@ $ sudo ldconfig
 #### Download [GoogleTest](https://github.com/google/googletest "Googletest Homepage")
 
 ```
-$ wget https://github.com/google/googletest/archive/release-1.12.1.zip
-$ unzip release-1.12.1.zip
+$ wget https://github.com/google/googletest/archive/refs/tags/v1.13.0.zip
+$ unzip v1.13.0.zip
 ```
 
 Please **DO NOT build or install** Google Test. Every user needs to compile
@@ -521,10 +527,10 @@ downloaded resides. Just type in your terminal (or add it to your
 `$HOME/.bashrc` file for a permanent solution) the following line:
 
 ```
-export GTEST_DIR=/home/username/googletest-release-1.12.1
+export GTEST_DIR=/home/username/googletest-1.13.0
 ```
 
-changing `/home/username/googletest-release-1.12.1` by the actual path where you
+changing `/home/username/googletest-1.13.0` by the actual path where you
 unpacked Google Test. If the CMake script does not find that folder, or the
 environment variable is not defined, or the source code is not installed by a
 package, then it will download a fresh copy of the Google Test source code and
@@ -789,26 +795,6 @@ $ sudo make install
 
 Of course, you will also need a GPU that
 [supports CUDA](https://developer.nvidia.com/cuda-gpus "CUDA GPUs").
-
-#### Build a portable binary
-
-In order to build an executable that not depends on the specific SIMD
-instruction set that is present in the processor of the compiling machine, so
-other users can execute it in other machines without those particular sets, use:
-
-```
-$ cmake -DENABLE_GENERIC_ARCH=ON ..
-$ make
-$ sudo make install
-```
-
-Using this option, all SIMD instructions are exclusively accessed via VOLK,
-which automatically includes versions of each function for different SIMD
-instruction sets, then detects at runtime which to use, or if there are none,
-substitutes a generic, non-SIMD implementation.
-
-More details can be found in our tutorial about
-[GNSS-SDR configuration options at building time](https://gnss-sdr.org/docs/tutorials/using-git/ "Configuration options at building time").
 
 ## macOS
 
